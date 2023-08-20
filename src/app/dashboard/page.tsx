@@ -43,6 +43,7 @@ function Dashboard() {
     getDasboardData();
   }, [startDate, endDate]);
 
+
   const getDasboardData = () => {
     setLoading(true);
     axios
@@ -53,13 +54,20 @@ function Dashboard() {
       )
       .then((response) => {
         setChartData(response.data);
-        console.log(">>", response.data);
         setLoading(false);
       })
       .catch((err) => {
         setLoading(false);
       });
   };
+
+  console.log('>>', chartData.trendPlots)
+  const lineLabel = chartData.trendPlots?.map((item: any) => item.date);
+  const dmarcLabel = chartData.trendPlots?.map((item: any) => item.failDmarcAlignment)
+  const volumeLabel = chartData.trendPlots?.map((item: any) => item.volume)
+
+  console.log('>>', lineLabel)
+
 
   const isEmpty = JSON.stringify(chartData) === "{}";
   const dmarcAlignment =
@@ -102,15 +110,15 @@ function Dashboard() {
   };
 
   const lineChartData = {
-    labels: ["January", "February", "March", "April", "May", "June", "July"],
+    labels: lineLabel,
     datasets: [
       {
-        label: "Total Successful",
-        data: [65, 59, 80, 81, 56, 55, 40],
+        label: "Failed Dmarc Alignment",
+        data: dmarcLabel,
       },
       {
-        label: "Total Fail",
-        data: [28, 48, 40, 19, 86, 27, 90],
+        label: "Volumne",
+        data: volumeLabel,
       },
     ],
   };
