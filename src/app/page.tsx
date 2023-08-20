@@ -84,15 +84,6 @@ function Home() {
   const [formattedDmarc, setFormattedDmarc] = useState<string[]>([]);
 
   const handleCheckDmarc = () => {
-    // Simulated DMARC check logic, replace with actual logic
-    const simulatedResults = [
-      { condition: "SPF Record", result: "Pass" },
-      { condition: "DKIM Alignment", result: "Pass" },
-      { condition: "SPF Alignment", result: "Fail" },
-      // Add more conditions and results as needed
-    ];
-
-    setDmarcResults(simulatedResults);
     dmarcLookup();
   };
 
@@ -105,26 +96,11 @@ function Home() {
         "(\\?[;&a-z\\d%_.~+=-]*)?" + // validate query string
         "(\\#[-a-z\\d_]*)?$",
       "i"
-    ); // validate fragment locator
+    );
     return !!urlPattern.test(urlString);
   };
 
   const dmarcLookup = () => {
-    // demarc.azurewebsites.net/dmarc/report?startDate=2023-07-01&endDate=2023-08-16
-    // fetch(
-    //   `https://demarc.azurewebsites.net/dmarc/dnsTxtLookUp?dmarcHostName=${url}`,
-    //   { headers: { "Content-Type": "application/json" } }
-    // )
-    //   // fetch(`https://demarc.azurewebsites.net/dmarc/report?startDate=2023-07-01&endDate=2023-08-16`, { mode: 'no-cors' })
-    //   .then((response) => {
-    //     response.json()
-    //   })
-    //   .then((data) => {
-    //     console.log("S", data);
-    //   })
-    //   .catch((error) => {
-    //     console.error("Error fetching API data:", error);
-    //   });
     setLoading(true);
     axios
       .get(
