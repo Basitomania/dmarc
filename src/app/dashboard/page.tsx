@@ -6,6 +6,7 @@ import DataTable from "react-data-table-component";
 import { ArcElement, CategoryScale } from "chart.js";
 import Chart from "chart.js/auto";
 import axios from "axios";
+import NavigationMenu from "../NavigationMenu";
 Chart.register(ArcElement, CategoryScale);
 
 type ResObject = {
@@ -20,15 +21,16 @@ interface ChartData {
   records: [];
   trendsPlots: [];
 }
-const currentDate = new Date();
-const lastMonthDate = new Date(currentDate);
-lastMonthDate.setMonth(currentDate.getMonth() - 1);
+
+const lastWeekAgo = new Date();
+lastWeekAgo.setDate(lastWeekAgo.getDate() - 7);
 
 function Dashboard() {
-  const [startDate, setStartDate] = useState<any>(lastMonthDate);
-  const [endDate, setEndDate] = useState<any>(new Date().toString());
+  const [startDate, setStartDate] = useState<any>(null);
+  const [endDate, setEndDate] = useState<any>(null);
   const [chartData, setChartData] = useState<any>({});
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const convertDate = (data: any) => {
     const inputDate = new Date(data);
@@ -43,31 +45,39 @@ function Dashboard() {
     getDasboardData();
   }, [startDate, endDate]);
 
-
   const getDasboardData = () => {
+    const newStartDate = startDate
+      ? startDate
+      : lastWeekAgo.toISOString().slice(0, 10);
+    const newEndDate = endDate
+      ? endDate
+      : new Date().toISOString().slice(0, 10);
     setLoading(true);
     axios
       .get(
         `https://demarc.azurewebsites.net/dmarc/report?startDate=${convertDate(
-          startDate
-        )}&endDate=${convertDate(endDate)}`
+          newStartDate
+        )}&endDate=${convertDate(newEndDate)}`
       )
       .then((response) => {
+        setError('');
         setChartData(response.data);
         setLoading(false);
       })
       .catch((err) => {
+        if (err.response.status == 404) {
+          const modifiedMsg = `No records for the selected Date`;
+          setError(modifiedMsg);
+        }
         setLoading(false);
       });
   };
 
-  console.log('>>', chartData.trendPlots)
   const lineLabel = chartData.trendPlots?.map((item: any) => item.date);
-  const dmarcLabel = chartData.trendPlots?.map((item: any) => item.failDmarcAlignment)
-  const volumeLabel = chartData.trendPlots?.map((item: any) => item.volume)
-
-  console.log('>>', lineLabel)
-
+  const dmarcLabel = chartData.trendPlots?.map(
+    (item: any) => item.failDmarcAlignment
+  );
+  const volumeLabel = chartData.trendPlots?.map((item: any) => item.volume);
 
   const isEmpty = JSON.stringify(chartData) === "{}";
   const dmarcAlignment =
@@ -128,38 +138,46 @@ function Dashboard() {
     {
       name: "From Domain",
       selector: (row: any) => row.fromDomain,
+      minWidth: "150px"
     },
     {
       name: "Ip Address",
       selector: (row: any) => row.ipAddress,
+      minWidth: "150px"
     },
     {
       name: "Server",
       selector: (row: any) => row.server,
+      minWidth: "250px"
     },
     {
       name: "Country Name",
       selector: (row: any) => row.countryName,
+      minWidth: "150px"
     },
     {
       name: "Country Iso code",
       selector: (row: any) => row.countryName,
+      minWidth: "150px"
     },
     {
       name: "Date From",
       selector: (row: any) => {
         return row.dateFrom.join("/");
       },
+      minWidth: "150px"
     },
     {
       name: "Date To",
       selector: (row: any) => {
         return row.dateTo.join("/");
       },
+      minWidth: "150px"
     },
     {
       name: "Demarc Alignment",
       selector: (row: any) => row.demarcAlignment,
+      minWidth: "150px"
     },
 
     {
@@ -167,100 +185,115 @@ function Dashboard() {
       selector: (row: any) => {
         return row.dkim.result;
       },
+      minWidth: "150px"
     },
     {
       name: "Email contact",
       selector: (row: any) => row.emailContact,
+      minWidth: "250px"
     },
     {
       name: "Policy applied",
       selector: (row: any) => row.policyApplied,
+      minWidth: "150px"
     },
     {
       name: "Reporter",
       selector: (row: any) => row.reporter,
+      minWidth: "150px"
     },
     {
       name: "SPF",
       selector: (row: any) => {
         return row.spf.result;
       },
+      minWidth: "150px"
     },
     {
       name: "Volume",
       selector: (row: any) => row.volume,
+      minWidth: "150px"
     },
   ];
 
   const data = chartData.records;
   if (loading) {
-    return <p>Loading...</p>
+    return <p>Loading...</p>;
   }
+  console.log("<<<", error);
 
   return (
-    <div className="flex flex-col p-5">
-      {/* Row 1: Filter by Date */}
-      <div className="flex flex-row p-4">
-        <div className="w-1/4 pt-10">
-          {/* <p className="font-semibold">Filter by Date</p> */}
-          <div className="flex space-x-2 text-black">
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="border rounded p-2 cursor-pointer"
-            />
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="border rounded p-2 cursor-pointer"
-            />
+    <div className="pt-20">
+      <NavigationMenu />
+
+      <div className="flex flex-col p-5">
+        {/* Row 1: Filter by Date */}
+        <div className="flex flex-row p-4">
+          <div className="w-1/4 pt-10">
+            {/* <p className="font-semibold">Filter by Date</p> */}
+            <div className="flex space-x-2 text-black">
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="border rounded p-2 cursor-pointer"
+                defaultValue={lastWeekAgo.toISOString().slice(0, 10)}
+              />
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="border rounded p-2 cursor-pointer"
+                defaultValue={new Date().toISOString().slice(0, 10)}
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Row 2: Pie charts */}
-      <div className="flex flex-row p-4">
-        {/* <p className="font-semibold">Alignment</p> */}
-        <div className="p-4">
-          <p>De Marc Chart</p>
-          <Pie data={dMarcPieChartData} />
-        </div>
-        <div className="p-4">
-          <p>DKIM</p>
-          <Pie data={dkimPieChartData} />
-        </div>
-        <div className="p-4">
-          <p>SPF</p>
-          <Pie data={spfPieChartData} />
-        </div>
-        {/* <div className="p-4">
+        {/* Row 2: Pie charts */}
+       {!error ?  <>
+          <div className="flex flex-row p-4">
+            {/* <p className="font-semibold">Alignment</p> */}
+            <div className="p-4">
+              <p>De Marc Chart</p>
+              <Pie data={dMarcPieChartData} />
+            </div>
+            <div className="p-4">
+              <p>DKIM</p>
+              <Pie data={dkimPieChartData} />
+            </div>
+            <div className="p-4">
+              <p>SPF</p>
+              <Pie data={spfPieChartData} />
+            </div>
+            {/* <div className="p-4">
           <Pie data={pieChartData} />
         </div> */}
-      </div>
-
-      {/* Row 3: Line chart */}
-      <div className="flex flex-row p-4">
-        <div>
-          <p className="font-semibold">Success and Fail Trend</p>
-          <div className="w-[900px]">
-            <Line data={lineChartData} />
           </div>
-        </div>
-      </div>
 
-      {/* Row 4: Data table */}
-      <div className="flex flex-row p-4">
-        <div className="w-full">
-          <p className="font-semibold">De Marc Table</p>
-          <DataTable
-            title="Demarc"
-            columns={columns}
-            data={data}
-            // defaultSortFieldId={1}
-          />
-        </div>
+          {/* Row 3: Line chart */}
+          <div className="flex flex-row p-4">
+            <div>
+              <p className="font-semibold">Success and Fail Trend</p>
+              <div className="w-[900px]">
+                <Line data={lineChartData} />
+              </div>
+            </div>
+          </div>
+
+          {/* Row 4: Data table */}
+          <div className="flex flex-row p-4">
+            <div className="w-full">
+              <p className="font-semibold">De Marc Table</p>
+              <DataTable
+                title="Demarc"
+                columns={columns}
+                data={data}
+                // defaultSortFieldId={1}
+              />
+            </div>
+          </div>
+        </> : <div>{error}</div>}
       </div>
     </div>
   );
