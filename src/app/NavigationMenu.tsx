@@ -6,9 +6,9 @@ const NavigationMenu = () => {
   const pathname = usePathname();
 
   const navigationLinks = [
-    { href: '/', label: 'Home' },
-    { href: '/dashboard', label: 'Dashboard' },
-    { href: '/questions', label: 'Questions' },
+    { href: '/', label: 'Dashboard' },
+    { href: '/build', label: 'Build' },
+    { href: '/review', label: 'Review' },
   ];
 
   return (
